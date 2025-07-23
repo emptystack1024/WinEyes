@@ -1,0 +1,47 @@
+﻿<Window x:Class="WinEyes.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WinEyes"
+        mc:Ignorable="d"
+        Title="WinEyes" 
+        Height="150" Width="300"
+        AllowsTransparency="True"
+        WindowStyle="None"
+        Background="Transparent"
+        Topmost="True"
+        MouseLeftButtonDown="Window_MouseLeftButtonDown">
+    
+    <Canvas x:Name="mainCanvas">
+        <!-- Left Eye -->
+        <Grid Canvas.Left="10" Canvas.Top="10" Width="120" Height="120">
+            <Ellipse x:Name="leftEyeBackground" Fill="White" Stroke="Black" StrokeThickness="2"/>
+            <Canvas>
+                <Ellipse x:Name="leftEyePupil" Width="40" Height="40" Fill="Black" Canvas.Left="40" Canvas.Top="40"/>
+            </Canvas>
+        </Grid>
+        
+        <!-- Right Eye -->
+        <Grid Canvas.Left="150" Canvas.Top="10" Width="120" Height="120">
+            <Ellipse x:Name="rightEyeBackground" Fill="White" Stroke="Black" StrokeThickness="2"/>
+            <Canvas>
+                <Ellipse x:Name="rightEyePupil" Width="40" Height="40" Fill="Black" Canvas.Left="40" Canvas.Top="40"/>
+            </Canvas>
+        </Grid>
+        
+        <!-- Context Menu for right-click -->
+        <Canvas.ContextMenu>
+            <ContextMenu>
+                <MenuItem Header="Move" Click="MoveMenuItem_Click"/>
+                <MenuItem Header="Resize">
+                    <MenuItem Header="Small" Click="ResizeSmallMenuItem_Click"/>
+                    <MenuItem Header="Medium" Click="ResizeMediumMenuItem_Click"/>
+                    <MenuItem Header="Large" Click="ResizeLargeMenuItem_Click"/>
+                </MenuItem>
+                <Separator/>
+                <MenuItem Header="Exit" Click="ExitMenuItem_Click"/>
+            </ContextMenu>
+        </Canvas.ContextMenu>
+    </Canvas>
+</Window>
