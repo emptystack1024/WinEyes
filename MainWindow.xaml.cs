@@ -25,15 +25,19 @@ public partial class MainWindow : Window
     private const double SmoothingTimeSeconds = 0.07;
     private const int GwlExStyle = -20;
     private const long WsExTransparent = 0x00000020L;
+    private const int WmActivateApp = 0x001C;
     private const int WmNcHitTest = 0x0084;
     private const int HtTransparent = -1;
     private const uint SwpNoSize = 0x0001;
     private const uint SwpNoMove = 0x0002;
     private const uint SwpNoZOrder = 0x0004;
+    private const uint SwpNoActivate = 0x0010;
     private const uint SwpFrameChanged = 0x0020;
+    private static readonly IntPtr HwndTopmost = new(-1);
 
     private readonly AppSettings settings;
     private readonly DispatcherTimer eyeTrackingTimer;
+    private readonly DispatcherTimer topmostEnforcementTimer;
     private readonly IReadOnlyDictionary<string, EyeStyle> eyeStyles = CreateEyeStyles();
     private readonly Dictionary<string, Forms.ToolStripMenuItem> styleMenuItems = new();
 
@@ -133,6 +137,12 @@ public partial class MainWindow : Window
             Interval = TimeSpan.FromMilliseconds(16)
         };
         eyeTrackingTimer.Tick += EyeTrackingTimer_Tick;
+
+        topmostEnforcementTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(250)
+        };
+        topmostEnforcementTimer.Tick += (_, _) => EnsureTopmost();
     }
 
     private void Window_SourceInitialized(object? sender, EventArgs e)
@@ -140,6 +150,7 @@ public partial class MainWindow : Window
         windowHandle = new WindowInteropHelper(this).Handle;
         windowSource = HwndSource.FromHwnd(windowHandle);
         windowSource?.AddHook(WindowMessageHook);
+        EnsureTopmost();
     }
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -149,15 +160,18 @@ public partial class MainWindow : Window
             PositionWindowTopRight();
         }
 
+        EnsureTopmost();
         InitializeTrayIcon();
         lastTrackingTime = DateTime.UtcNow;
         eyeTrackingTimer.Start();
+        topmostEnforcementTimer.Start();
     }
 
     private void Window_Closing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
         SaveWindowState();
         eyeTrackingTimer.Stop();
+        topmostEnforcementTimer.Stop();
         isMoving = false;
         isRightResizing = false;
         if (Mouse.Captured == this)
@@ -505,6 +519,7 @@ public partial class MainWindow : Window
         topmostMenuItem.Click += (_, _) =>
         {
             Topmost = topmostMenuItem.Checked;
+            EnsureTopmost();
             SaveWindowState();
         };
         trayMenu.Items.Add(topmostMenuItem);
@@ -605,6 +620,24 @@ public partial class MainWindow : Window
         Canvas.SetTop(rightEyePupil, 60 - pupilSize / 2);
     }
 
+    private void EnsureTopmost()
+    {
+        if (!Topmost || windowHandle == IntPtr.Zero ||
+            Visibility != Visibility.Visible || WindowState == WindowState.Minimized)
+        {
+            return;
+        }
+
+        SetWindowPos(
+            windowHandle,
+            HwndTopmost,
+            0,
+            0,
+            0,
+            0,
+            SwpNoMove | SwpNoSize | SwpNoActivate);
+    }
+
     private void SetMousePassthrough(bool enabled)
     {
         isMousePassthrough = enabled;
@@ -638,6 +671,17 @@ public partial class MainWindow : Window
         IntPtr lParam,
         ref bool handled)
     {
+        if (message == WmActivateApp && Topmost && wParam == IntPtr.Zero)
+        {
+            EnsureTopmost();
+            if (!Dispatcher.HasShutdownStarted)
+            {
+                Dispatcher.BeginInvoke(
+                    DispatcherPriority.ApplicationIdle,
+                    new Action(EnsureTopmost));
+            }
+        }
+
         if (message == WmNcHitTest && isMousePassthrough)
         {
             handled = true;

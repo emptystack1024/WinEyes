@@ -2,6 +2,24 @@
 
 Status: active
 
+## 2026-09-04 — 修复任务栏覆盖置顶
+
+### Problem
+Windows 任务栏重新排序后可能覆盖已启用置顶的 WinEyes 窗口，导致窗口位于任务栏区域时暂时不可见；托盘应用也不应额外显示任务栏按钮。
+
+### Changes
+- `MainWindow.xaml`：隐藏主窗口的任务栏按钮，保留系统托盘作为控制入口。
+- `MainWindow.xaml.cs`：使用 `HWND_TOPMOST` 和 `SWP_NOACTIVATE` 显式恢复窗口 Z 序，在窗口初始化、置顶切换和 `WM_ACTIVATEAPP` 后重新置顶，并增加 250 ms 的低频兜底校正。
+
+### Consequences
+- 置顶开启时，任务栏点击后的 Shell 重排序会在最多一个 watchdog 周期内被校正，且不会抢回输入焦点。
+- 任务栏、全屏程序、安全桌面或其他系统 UI 仍可能暂时覆盖普通桌面窗口；该行为没有公开的绝对“高于所有 Shell UI”保证。
+- 已在 Windows 桌面上启动应用并点击任务栏空白区域验证，窗口在等待 watchdog 周期后仍可见。
+
+### Alternatives considered
+- 仅依赖 `WM_ACTIVATEAPP`：任务栏的纯 Z 序变化可能不发送该消息，因此不足以覆盖所有情况。
+- `SetWinEventHook` 全局监听：实现复杂度和生命周期管理成本较高，本项目采用低频 watchdog 作为可靠兜底。
+
 ## 2026-09-04 — 完善窗口缩放、交互与状态恢复
 
 ### Problem
