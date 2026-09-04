@@ -14,8 +14,9 @@ WinEyes displays a pair of eyes on your screen that follow your mouse cursor, ju
 - **Always on Top**: Toggle the always-on-top behavior from the system tray
 - **Mouse Tracking**: Both eyes smoothly follow your mouse cursor
 - **Window Movement**: Drag the eyes with the left mouse button when passthrough is disabled
-- **Continuous Resize**: Hold the right mouse button and drag down-right to enlarge or up-left to shrink
+- **Continuous Resize**: Hold the right mouse button and drag down-right to enlarge or up-left to shrink, from 60×30 to 900×450
 - **System Tray Controls**: Toggle mouse passthrough, always-on-top, preset sizes, built-in styles, show/restore, and exit
+- **Start with Windows**: Enable or disable current-user startup from the system tray
 - **State Restoration**: The last position, size, topmost state, and selected style are restored on the next launch
 - **Built-in Styles**: Classic, Midnight, and Neon XAML vector styles
 
@@ -55,8 +56,9 @@ please also add a summarization of the plan and the steps you executed to write 
 6. **Window Positioning**: Set initial position to the top-right corner and restore the last valid position
 7. **Continuous Resizing**: Added right-button drag resizing with fixed aspect ratio and size limits
 8. **System Tray Controls**: Added tray controls for passthrough, topmost, sizes, styles, restoring, and exiting
-9. **State Persistence**: Added local JSON persistence for window state and selected style
-10. **Documentation**: Created this README.md with screenshots and instructions
+9. **Startup Integration**: Added an optional current-user Windows startup entry controlled from the system tray
+10. **State Persistence**: Added local JSON persistence for window state and selected style
+11. **Documentation**: Created this README.md with screenshots and instructions
 
 ## Running the Application
 
@@ -67,6 +69,7 @@ To run WinEyes:
 3. Build and run the project
 4. Use the system tray icon to access settings and exit
 5. Use the left mouse button to move the window and the right mouse button to resize it
+6. Enable or disable **Start with Windows** from the system tray; this affects only the current Windows user
 
 ## Requirements
 

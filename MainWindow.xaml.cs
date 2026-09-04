@@ -19,7 +19,7 @@ public partial class MainWindow : Window
     private const double DesignWidth = 300;
     private const double DesignHeight = 150;
     private const double WindowAspectRatio = DesignWidth / DesignHeight;
-    private const double MinimumWindowWidth = 120;
+    private const double MinimumWindowWidth = 60;
     private const double MaximumWindowWidth = 900;
     private const double PupilTravelFactor = 0.7;
     private const double SmoothingTimeSeconds = 0.07;
@@ -45,6 +45,7 @@ public partial class MainWindow : Window
     private Forms.ContextMenuStrip? trayMenu;
     private Forms.ToolStripMenuItem? passthroughMenuItem;
     private Forms.ToolStripMenuItem? topmostMenuItem;
+    private Forms.ToolStripMenuItem? startupMenuItem;
     private HwndSource? windowSource;
     private IntPtr windowHandle;
     private bool isMousePassthrough;
@@ -504,6 +505,7 @@ public partial class MainWindow : Window
         }
 
         trayMenu = new Forms.ContextMenuStrip();
+        trayMenu.Opening += (_, _) => UpdateTrayMenuState();
 
         var showWindowItem = new Forms.ToolStripMenuItem("Show WinEyes");
         showWindowItem.Click += (_, _) => ShowWindow();
@@ -523,6 +525,13 @@ public partial class MainWindow : Window
             SaveWindowState();
         };
         trayMenu.Items.Add(topmostMenuItem);
+
+        startupMenuItem = new Forms.ToolStripMenuItem("Start with Windows")
+        {
+            CheckOnClick = false
+        };
+        startupMenuItem.Click += StartupMenuItem_Click;
+        trayMenu.Items.Add(startupMenuItem);
 
         passthroughMenuItem = new Forms.ToolStripMenuItem("Mouse passthrough")
         {
@@ -566,6 +575,27 @@ public partial class MainWindow : Window
             Visible = true
         };
         trayIcon.DoubleClick += (_, _) => ShowWindow();
+        UpdateTrayMenuState();
+    }
+
+    private void StartupMenuItem_Click(object? sender, EventArgs e)
+    {
+        if (sender is not Forms.ToolStripMenuItem item)
+        {
+            return;
+        }
+
+        bool enabled = !item.Checked;
+        if (!StartupManager.TrySetEnabled(enabled))
+        {
+            System.Windows.MessageBox.Show(
+                this,
+                "Unable to update the Windows startup setting.",
+                "WinEyes",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+
         UpdateTrayMenuState();
     }
 
@@ -716,6 +746,11 @@ public partial class MainWindow : Window
         if (passthroughMenuItem is not null)
         {
             passthroughMenuItem.Checked = isMousePassthrough;
+        }
+
+        if (startupMenuItem is not null)
+        {
+            startupMenuItem.Checked = StartupManager.IsEnabled();
         }
 
         foreach (var styleItem in styleMenuItems)
